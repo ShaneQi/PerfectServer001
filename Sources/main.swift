@@ -50,7 +50,6 @@ routes.add(method: .post, uri: "/stringfromdate", handler: {
 
 routes.add(method: .post, uri: "/datefromstring", handler: {
 	request, response in 
-
 	response.status = HTTPResponseStatus.statusFrom(code: 400)
 	response.setHeader(.contentType, value: "application/json")
 	let bodyString = request.postBodyString ?? ""
@@ -68,10 +67,11 @@ routes.add(method: .post, uri: "/datefromstring", handler: {
 				
 				let date = formatter.date(from: dateString)
 				if let unwrappedDate = date {
-					let tempDateFormatter = DateFormatter()
-					tempDateFormatter.dateFormat = "MMM d, yyyy, hh:mm aa"
-					let dateString = tempDateFormatter.string(from: unwrappedDate)
-					responseDictionary["date_string"] = dateString
+					let tempFormatter = DateFormatter()
+					tempFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss Z"
+					let dateString: String? = tempFormatter.string(from: unwrappedDate)
+					// 2000-01-01 00:00:00 +0000	
+					responseDictionary["date_string"] = "\(dateString)"
 				} else {
 					responseDictionary["date_string"] = date
 				}
@@ -91,7 +91,7 @@ routes.add(method: .post, uri: "/datefromstring", handler: {
 })
 
 server.addRoutes(routes)
-server.serverPort = 8181
+server.serverPort = 8182
 
 configureServer(server)
 
