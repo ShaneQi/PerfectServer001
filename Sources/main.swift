@@ -57,7 +57,7 @@ routes.add(method: .post, uri: "/dateformatter", handler: {
 					tempFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss Z"
 					let dateString: String? = tempFormatter.string(from: unwrappedDate)
 					// 2000-01-01 00:00:00 +0000	
-					responseDictionary["date_value"] = "\(dateString)"
+					responseDictionary["date_value"] = "\(String(describing: dateString))"
 				} else {
 					responseDictionary["date_value"] = "nil"
 				}
@@ -77,8 +77,6 @@ routes.add(method: .post, uri: "/dateformatter", handler: {
 
 server.addRoutes(routes)
 server.serverPort = 8182
-
-configureServer(server)
 
 do {
 	try server.start()
