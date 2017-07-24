@@ -1,4 +1,3 @@
-import PerfectLib
 import PerfectHTTP
 import PerfectHTTPServer
 import Foundation
@@ -6,21 +5,6 @@ import Foundation
 let server = HTTPServer()
 
 var routes = Routes()
-
-routes.add(method: .post, uri: "/upload", handler: {
-    request, response in 
-		if let uploads = request.postFileUploads,
-			let file = uploads.first?.file,
-			let fileName = uploads.first?.fileName {
-      do {
-        let _ = try file.moveTo(path: "./upload/\(fileName)", overWrite: true)
-      } catch {}
-		}
-
-		response.completed()
-		
-  }
-)
 
 routes.add(method: .get, uri: "/", handler: {
 		request, response in
@@ -78,8 +62,4 @@ routes.add(method: .post, uri: "/dateformatter", handler: {
 server.addRoutes(routes)
 server.serverPort = 8182
 
-do {
-	try server.start()
-} catch PerfectError.networkError(let err, let msg) {
-	print("Network error thrown: \(err) \(msg)")
-}
+try! server.start()
