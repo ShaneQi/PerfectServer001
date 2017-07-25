@@ -19,6 +19,7 @@ routes.add(method: .post, uri: "/dateformatter", handler: {
 
 	response.status = HTTPResponseStatus.statusFrom(code: 400)
 	response.setHeader(.contentType, value: "application/json")
+	response.setHeader(.accessControlAllowOrigin, value: "*")
 	let bodyString = request.postBodyString ?? ""
 
 	do {
