@@ -1,23 +1,9 @@
 #!/bin/bash
-if [[ `uname` == 'Darwin' ]]; then
-	brew install coreutils
-	SCRIPT=`greadlink -f $0`
-else
-	SCRIPT=`readlink -f $0`
-fi
-SCRIPTPATH=`dirname $SCRIPT`
-PROJPATH=`dirname $SCRIPTPATH`
-
 docker run \
 -d \
 --name PerfectServer001 \
--v $PROJPATH:/PerfectServer001 \
+-v `pwd`:/PerfectServer001 \
 -w /PerfectServer001 \
-swift:3.1.0 \
+swiftdocker/swift:latest \
 /bin/sh -c \
-"\
-apt update;\
-apt install uuid-dev -y;\
-swift build;\
-.build/debug/PerfectServer001;\
-" 
+"swift run"
