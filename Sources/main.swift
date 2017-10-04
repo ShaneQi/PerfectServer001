@@ -1,66 +1,74 @@
-import PerfectHTTP
-import PerfectHTTPServer
+import HTTP
 import Foundation
 
-let server = HTTPServer()
+struct DateFormatterRequest: Codable {
 
-var routes = Routes()
+	let format: String
+	let dateString: String
 
-routes.add(method: .get, uri: "/", handler: {
-		request, response in
-		response.setHeader(.contentType, value: "text/html")
-		response.appendBody(string: "<html><title>Hello, world!</title><body>Hello, world!</body></html>")
-		response.completed()
+	enum CodingKeys: CodingKey, String {
+		case format
+		case dateString = "date_string"
 	}
-)
 
-routes.add(method: .post, uri: "/dateformatter", handler: {
-	request, response in
+}
 
-	response.status = HTTPResponseStatus.statusFrom(code: 400)
-	response.setHeader(.contentType, value: "application/json")
-	response.setHeader(.accessControlAllowOrigin, value: "*")
-	let bodyString = request.postBodyString ?? ""
+func dateFormatterHandle(request: HTTPRequest, response: HTTPResponseWriter ) -> HTTPBodyProcessing {
+	switch request.method {
+	case .get:
+		response.writeHeader(status: .ok)
+		response.writeBody("Hello, World!")
+		response.done()
+		return .discardBody
+	case .post:
+		var requestData = Data()
+		return .processBody { chunk, stop in
+			switch chunk {
+			case .chunk(let data, let finishedProcessing):
+				for byte in data { requestData.append(byte) }
+				finishedProcessing()
+			case .end:
+				do {
+					let dateFormatterRequest = try JSONDecoder().decode(DateFormatterRequest.self, from: requestData)
+					var responseDictionary = [String: String]()
 
-	do {
-		let bodyObject = try bodyString.jsonDecode()
-		if let bodyDictionary = bodyObject as? [String: Any], 
-				let format = bodyDictionary["format"] as? String,
-				let dateString = bodyDictionary["date_string"] as? String
-			{
-				var responseDictionary = [String: Any]()
+					let formatter = DateFormatter()
+					formatter.dateFormat = dateFormatterRequest.format
 
-				let formatter = DateFormatter()
-				formatter.dateFormat = format
-				
-				let dateStringResult = formatter.string(from: Date())
-				responseDictionary["date_string"] = dateStringResult
+					let dateStringResult = formatter.string(from: Date())
+					responseDictionary["date_string"] = dateStringResult
 
-				let date = formatter.date(from: dateString)
-				if let unwrappedDate = date {
-					let tempFormatter = DateFormatter()
-					tempFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss Z"
-					let dateString: String? = tempFormatter.string(from: unwrappedDate)
-					// 2000-01-01 00:00:00 +0000	
-					responseDictionary["date_value"] = "\(String(describing: dateString))"
-				} else {
-					responseDictionary["date_value"] = "nil"
+					let date = formatter.date(from: dateFormatterRequest.dateString)
+					if let unwrappedDate = date {
+						let tempFormatter = DateFormatter()
+						tempFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss Z"
+						let dateString: String? = tempFormatter.string(from: unwrappedDate)
+						// 2000-01-01 00:00:00 +0000
+						responseDictionary["date_value"] = "\(String(describing: dateString))"
+					} else {
+						responseDictionary["date_value"] = "nil"
+					}
+					dump(try JSONEncoder().encode(responseDictionary))
+					response.writeHeader(
+						status: .ok,
+						headers: [HTTPHeaders.Name.contentType: "application/json",
+						          HTTPHeaders.Name.accessControlAllowOrigin: "*"])
+					response.writeBody(try JSONEncoder().encode(responseDictionary))
+				} catch(let error) {
+					response.writeHeader(status: .badRequest)
+					response.writeBody("\(error)".data(using: .utf8) ?? Data())
 				}
-
-				let responseString = try responseDictionary.jsonEncodedString()
-				response.status = HTTPResponseStatus.ok
-				response.appendBody(string: responseString)
-				response.completed()
-			 
-			} else {
-					response.completed()
+				response.done()
+			default:
+				stop = true
+				response.abort()
 			}
-	} catch {
-		response.completed()
+		}
+	default: return .discardBody
 	}
-})
+}
 
-server.addRoutes(routes)
-server.serverPort = 8182
+let server = HTTPServer()
+try! server.start(port: 8182, handler: dateFormatterHandle)
 
-try! server.start()
+CFRunLoopRun()
