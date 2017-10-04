@@ -71,4 +71,4 @@ func dateFormatterHandle(request: HTTPRequest, response: HTTPResponseWriter ) ->
 let server = HTTPServer()
 try! server.start(port: 8182, handler: dateFormatterHandle)
 
-CFRunLoopRun()
+RunLoop.current.run()
