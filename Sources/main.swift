@@ -5,10 +5,12 @@ struct DateFormatterRequest: Codable {
 
 	let format: String
 	let dateString: String
+	let timeZone: String
 
 	enum CodingKeys: CodingKey, String {
 		case format
 		case dateString = "date_string"
+		case timeZone = "time_zone"
 	}
 
 }
@@ -42,6 +44,7 @@ func dateFormatterHandle(request: HTTPRequest, response: HTTPResponseWriter ) ->
 
 					let formatter = DateFormatter()
 					formatter.dateFormat = dateFormatterRequest.format
+					formatter.timeZone = TimeZone(abbreviation: dateFormatterRequest.timeZone)
 
 					let dateStringResult = formatter.string(from: Date())
 					responseDictionary["date_string"] = dateStringResult
