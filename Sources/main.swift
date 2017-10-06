@@ -15,6 +15,14 @@ struct DateFormatterRequest: Codable {
 
 func dateFormatterHandle(request: HTTPRequest, response: HTTPResponseWriter ) -> HTTPBodyProcessing {
 	switch request.method {
+	case .options:
+		response.writeHeader(
+			status: .ok,
+			headers: [HTTPHeaders.Name.contentType: "application/json",
+			          HTTPHeaders.Name.accessControlAllowOrigin: "*",
+			          HTTPHeaders.Name.accessControlAllowHeaders: "Origin, X-Requested-With, Content-Type, Accept"])
+		response.done()
+		return .discardBody
 	case .get:
 		response.writeHeader(status: .ok)
 		response.writeBody("Hello, World!")
